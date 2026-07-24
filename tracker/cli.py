@@ -1,0 +1,113 @@
+from datetime import date
+
+from database import add_transaction, get_all_transactions
+from tracker.models import CATEGORIES, TYPES, Transaction
+
+
+def display_header():
+    print("\n" + "=" * 40)
+    print("   Personal Finance Tracker (PCT)")
+    print("=" * 40)
+
+
+def display_menu():
+    print("\nWhat do you want to do?")
+    print("  1. Add transaction")
+    print("  2. List all transactions")
+    print("  0. Exit")
+
+
+def prompt_type() -> str:
+    print("\nType:")
+    for i, t in enumerate(TYPES, 1):
+        print(f"  {i}. {t}")
+    while True:
+        choice = input("Select (1-2): ").strip()
+        if choice in ("1", "2"):
+            return TYPES[int(choice) - 1]
+        print("  Invalid option. Try again.")
+
+
+def prompt_amount() -> float:
+    while True:
+        raw = input("Amount ($): ").strip()
+        try:
+            value = float(raw)
+            if value <= 0:
+                print("  Amount must be greater than 0.")
+                continue
+            return value
+        except ValueError:
+            print("  Please enter a valid number.")
+
+
+def prompt_category() -> str:
+    print("\nCategory:")
+    for i, cat in enumerate(CATEGORIES, 1):
+        print(f"  {i}. {cat}")
+    while True:
+        choice = input(f"Select (1-{len(CATEGORIES)}): ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(CATEGORIES):
+            return CATEGORIES[int(choice) - 1]
+        print("  Invalid option. Try again.")
+
+
+def prompt_note() -> str:
+    note = input("Note (optional, press Enter to skip): ").strip()
+    return note
+
+
+def handle_add_transaction():
+    print("\n--- New Transaction ---")
+    t_type = prompt_type()
+    amount = prompt_amount()
+    category = prompt_category()
+    note = prompt_note()
+    today = date.today().isoformat()  # YYYY-MM-DD
+
+    transaction = Transaction(
+        type=t_type,
+        amount=amount,
+        category=category,
+        note=note,
+        date=today,
+    )
+
+    new_id = add_transaction(transaction)
+    print(f"\n  ✓ Transaction saved (ID: {new_id})")
+    print(f"    {t_type.upper()} | ${amount:.2f} | {category} | {today}")
+
+
+def handle_list_transactions():
+    transactions = get_all_transactions()
+
+    if not transactions:
+        print("\n  No transactions found.")
+        return
+
+    print(f"\n{'ID':<5} {'Date':<12} {'Type':<10} {'Amount':<10} {'Category':<18} Note")
+    print("-" * 70)
+
+    for t in transactions:
+        sign = "+" if t.type == "ingreso" else "-"
+        print(
+            f"{t.id:<5} {t.date:<12} {t.type:<10} "
+            f"{sign}${t.amount:<9.2f} {t.category:<18} {t.note or ''}"
+        )
+
+
+def run():
+    display_header()
+    while True:
+        display_menu()
+        choice = input("\nOption: ").strip()
+
+        if choice == "1":
+            handle_add_transaction()
+        elif choice == "2":
+            handle_list_transactions()
+        elif choice == "0":
+            print("\nGoodbye!\n")
+            break
+        else:
+            print("  Invalid option. Try again.")
