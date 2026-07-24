@@ -1,7 +1,7 @@
-from datetime import date
+from datetime import datetime
 
 from database import add_transaction, get_all_transactions
-from tracker.models import CATEGORIES, TYPES, Transaction
+from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transaction
 
 
 def display_header():
@@ -41,14 +41,25 @@ def prompt_amount() -> float:
             print("  Please enter a valid number.")
 
 
-def prompt_category() -> str:
+def prompt_income_category() -> str:
     print("\nCategory:")
-    for i, cat in enumerate(CATEGORIES, 1):
+    for i, cat in enumerate(INCOME_CATEGORIES, 1):
         print(f"  {i}. {cat}")
     while True:
-        choice = input(f"Select (1-{len(CATEGORIES)}): ").strip()
-        if choice.isdigit() and 1 <= int(choice) <= len(CATEGORIES):
-            return CATEGORIES[int(choice) - 1]
+        choice = input(f"Select (1-{len(INCOME_CATEGORIES)}): ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(INCOME_CATEGORIES):
+            return INCOME_CATEGORIES[int(choice) - 1]
+        print("  Invalid option. Try again.")
+
+
+def prompt_expense_category() -> str:
+    print("\nCategory:")
+    for i, cat in enumerate(EXPENSE_CATEGORIES, 1):
+        print(f"  {i}. {cat}")
+    while True:
+        choice = input(f"Select (1-{len(EXPENSE_CATEGORIES)}): ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(EXPENSE_CATEGORIES):
+            return EXPENSE_CATEGORIES[int(choice) - 1]
         print("  Invalid option. Try again.")
 
 
@@ -61,9 +72,13 @@ def handle_add_transaction():
     print("\n--- New Transaction ---")
     t_type = prompt_type()
     amount = prompt_amount()
-    category = prompt_category()
+    if t_type == "Income":
+        category = prompt_income_category()
+    else:
+        category = prompt_expense_category()
+
     note = prompt_note()
-    today = date.today().isoformat()  # YYYY-MM-DD
+    today = datetime.now().astimezone().date().isoformat()
 
     transaction = Transaction(
         type=t_type,
@@ -89,7 +104,7 @@ def handle_list_transactions():
     print("-" * 70)
 
     for t in transactions:
-        sign = "+" if t.type == "ingreso" else "-"
+        sign = "+" if t.type == "Income" else "-"
         print(
             f"{t.id:<5} {t.date:<12} {t.type:<10} "
             f"{sign}${t.amount:<9.2f} {t.category:<18} {t.note or ''}"

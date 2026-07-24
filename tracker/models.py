@@ -1,22 +1,24 @@
 from dataclasses import dataclass
 
-CATEGORIES = [
-    "Comida",
-    "Transporte",
-    "Renta",
-    "Entretenimiento",
+EXPENSE_CATEGORIES = [
+    "Food",
+    "Transport",
+    "Rent",
+    "Entertainment",
     "Internet-Data",
-    "Otros",
+    "Others",
 ]
 
-TYPES = ["gasto", "ingreso"]
+INCOME_CATEGORIES = ["Salary", "Paycheck", "Others"]
+
+TYPES = ["Income", "Expense"]
 
 
 @dataclass
 class Transaction:
     """Represents a single financial transaction."""
 
-    type: str  # 'gasto' or 'ingreso'
+    type: str  # 'Expense' or 'Income'
     amount: float
     category: str
     note: str
