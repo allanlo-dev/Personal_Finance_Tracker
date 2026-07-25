@@ -1,6 +1,10 @@
 from datetime import datetime
 
-from database import add_transaction, get_all_transactions
+from database import (
+    add_transaction,
+    get_all_transactions,
+    get_transactions_of_last_30_days,
+)
 from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transaction
 
 
@@ -14,6 +18,7 @@ def display_menu():
     print("\nWhat do you want to do?")
     print("  1. Add transaction")
     print("  2. List all transactions")
+    print("  3. List transactions of last 30 days")
     print("  0. Exit")
 
 
@@ -111,6 +116,24 @@ def handle_list_transactions():
         )
 
 
+def list_transactions_of_last_30_days():
+    transactions = get_transactions_of_last_30_days()
+
+    if not transactions:
+        print("\n  No transactions found.")
+        return
+
+    print(f"\n{'ID':<5} {'Date':<12} {'Type':<10} {'Amount':<10} {'Category':<18} Note")
+    print("-" * 70)
+
+    for t in transactions:
+        sign = "+" if t.type == "Income" else "-"
+        print(
+            f"{t.id:<5} {t.date:<12} {t.type:<10} "
+            f"{sign}${t.amount:<9.2f} {t.category:<18} {t.note or ''}"
+        )
+
+
 def run():
     display_header()
     while True:
@@ -121,6 +144,8 @@ def run():
             handle_add_transaction()
         elif choice == "2":
             handle_list_transactions()
+        elif choice == "3":
+            list_transactions_of_last_30_days()
         elif choice == "0":
             print("\nGoodbye!\n")
             break

@@ -82,3 +82,29 @@ def get_all_transactions() -> list[Transaction]:
         )
         for row in rows
     ]
+
+
+def get_transactions_of_last_30_days():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT id, type, amount, category, note, date
+    FROM transactions
+    WHERE date BETWEEN date(date, '-30 days') AND date('now')
+    ORDER BY date DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [
+        Transaction(
+            id=row["id"],
+            type=row["type"],
+            amount=row["amount"],
+            category=row["category"],
+            note=row["note"],
+            date=row["date"],
+        )
+        for row in rows
+    ]
