@@ -89,10 +89,9 @@ def get_transactions_of_last_30_days():
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT id, type, amount, category, note, date
-    FROM transactions
-    WHERE date BETWEEN date(date, '-30 days') AND date('now')
-    ORDER BY date DESC
+    SELECT * FROM transactions 
+    WHERE date BETWEEN date('now', '-30 days', 'localtime') AND date('now', 'localtime')
+    ORDER BY date ASC;
     """)
     rows = cursor.fetchall()
     conn.close()
