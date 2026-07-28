@@ -3,6 +3,7 @@ from datetime import datetime
 from database import (
     add_transaction,
     get_all_transactions,
+    get_transactions_by_month,
     get_transactions_of_last_30_days,
 )
 from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transaction
@@ -19,7 +20,24 @@ def display_menu():
     print("  1. Add transaction")
     print("  2. List all transactions")
     print("  3. List transactions of last 30 days")
+    print("  4. List transactions by month")
     print("  0. Exit")
+
+
+def diplay_transactions(transactions):
+    if not transactions:
+        print("\n  No transactions found.")
+        return
+
+    print(f"\n{'ID':<5} {'Date':<12} {'Type':<10} {'Amount':<10} {'Category':<18} Note")
+    print("-" * 70)
+
+    for t in transactions:
+        sign = "+" if t.type == "Income" else "-"
+        print(
+            f"{t.id:<5} {t.date:<12} {t.type:<10} "
+            f"{sign}${t.amount:<9.2f} {t.category:<18} {t.note or ''}"
+        )
 
 
 def prompt_type() -> str:
@@ -73,6 +91,16 @@ def prompt_note() -> str:
     return note
 
 
+def prompt_month() -> int:
+    while True:
+        month_inp = input("Select the Month(1-12):  ").strip()
+        if month_inp.isdigit() and 1 <= int(month_inp) <= 12:
+            month = int(month_inp)
+            break
+        print("X Invalid Month. || Please select a number between 1 and 12!")
+    return month
+
+
 def handle_add_transaction():
     print("\n--- New Transaction ---")
     t_type = prompt_type()
@@ -98,40 +126,23 @@ def handle_add_transaction():
     print(f"    {t_type.upper()} | ${amount:.2f} | {category} | {today}")
 
 
+def handle_transactions_by_month():
+    month = prompt_month()
+    transactions = get_transactions_by_month(month)
+
+    diplay_transactions(transactions)
+
+
 def handle_list_transactions():
     transactions = get_all_transactions()
 
-    if not transactions:
-        print("\n  No transactions found.")
-        return
-
-    print(f"\n{'ID':<5} {'Date':<12} {'Type':<10} {'Amount':<10} {'Category':<18} Note")
-    print("-" * 70)
-
-    for t in transactions:
-        sign = "+" if t.type == "Income" else "-"
-        print(
-            f"{t.id:<5} {t.date:<12} {t.type:<10} "
-            f"{sign}${t.amount:<9.2f} {t.category:<18} {t.note or ''}"
-        )
+    diplay_transactions(transactions)
 
 
 def list_transactions_of_last_30_days():
     transactions = get_transactions_of_last_30_days()
 
-    if not transactions:
-        print("\n  No transactions found.")
-        return
-
-    print(f"\n{'ID':<5} {'Date':<12} {'Type':<10} {'Amount':<10} {'Category':<18} Note")
-    print("-" * 70)
-
-    for t in transactions:
-        sign = "+" if t.type == "Income" else "-"
-        print(
-            f"{t.id:<5} {t.date:<12} {t.type:<10} "
-            f"{sign}${t.amount:<9.2f} {t.category:<18} {t.note or ''}"
-        )
+    diplay_transactions(transactions)
 
 
 def run():
@@ -146,6 +157,8 @@ def run():
             handle_list_transactions()
         elif choice == "3":
             list_transactions_of_last_30_days()
+        elif choice == "4":
+            handle_transactions_by_month()
         elif choice == "0":
             print("\nGoodbye!\n")
             break
