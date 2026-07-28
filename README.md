@@ -24,7 +24,7 @@ A command-line application to track personal expenses and income, built with Pyt
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/personal-finance-tracker.git
+git clone git@github.com:allanlo-dev/Personal_Finance_Tracker.git
 cd personal-finance-tracker
 
 # Create virtual environment
