@@ -24,6 +24,22 @@ def display_menu():
     print("  0. Exit")
 
 
+def diplay_transactions(transactions):
+    if not transactions:
+        print("\n  No transactions found.")
+        return
+
+    print(f"\n{'ID':<5} {'Date':<12} {'Type':<10} {'Amount':<10} {'Category':<18} Note")
+    print("-" * 70)
+
+    for t in transactions:
+        sign = "+" if t.type == "Income" else "-"
+        print(
+            f"{t.id:<5} {t.date:<12} {t.type:<10} "
+            f"{sign}${t.amount:<9.2f} {t.category:<18} {t.note or ''}"
+        )
+
+
 def prompt_type() -> str:
     print("\nType:")
     for i, t in enumerate(TYPES, 1):
@@ -114,55 +130,19 @@ def handle_transactions_by_month():
     month = prompt_month()
     transactions = get_transactions_by_month(month)
 
-    if not transactions:
-        print("\n  No transactions found.")
-        return
-
-    print(f"\n{'ID':<5} {'Date':<12} {'Type':<10} {'Amount':<10} {'Category':<18} Note")
-    print("-" * 70)
-
-    for t in transactions:
-        sign = "+" if t.type == "Income" else "-"
-        print(
-            f"{t.id:<5} {t.date:<12} {t.type:<10} "
-            f"{sign}${t.amount:<9.2f} {t.category:<18} {t.note or ''}"
-        )
+    diplay_transactions(transactions)
 
 
 def handle_list_transactions():
     transactions = get_all_transactions()
 
-    if not transactions:
-        print("\n  No transactions found.")
-        return
-
-    print(f"\n{'ID':<5} {'Date':<12} {'Type':<10} {'Amount':<10} {'Category':<18} Note")
-    print("-" * 70)
-
-    for t in transactions:
-        sign = "+" if t.type == "Income" else "-"
-        print(
-            f"{t.id:<5} {t.date:<12} {t.type:<10} "
-            f"{sign}${t.amount:<9.2f} {t.category:<18} {t.note or ''}"
-        )
+    diplay_transactions(transactions)
 
 
 def list_transactions_of_last_30_days():
     transactions = get_transactions_of_last_30_days()
 
-    if not transactions:
-        print("\n  No transactions found.")
-        return
-
-    print(f"\n{'ID':<5} {'Date':<12} {'Type':<10} {'Amount':<10} {'Category':<18} Note")
-    print("-" * 70)
-
-    for t in transactions:
-        sign = "+" if t.type == "Income" else "-"
-        print(
-            f"{t.id:<5} {t.date:<12} {t.type:<10} "
-            f"{sign}${t.amount:<9.2f} {t.category:<18} {t.note or ''}"
-        )
+    diplay_transactions(transactions)
 
 
 def run():
