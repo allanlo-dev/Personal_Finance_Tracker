@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 from tracker.models import Transaction
 
@@ -95,6 +96,32 @@ def get_transactions_of_last_30_days():
     """)
     rows = cursor.fetchall()
     conn.close()
+
+    return [
+        Transaction(
+            id=row["id"],
+            type=row["type"],
+            amount=row["amount"],
+            category=row["category"],
+            note=row["note"],
+            date=row["date"],
+        )
+        for row in rows
+    ]
+
+
+def get_transactions_by_month(month: int):
+    year = datetime.now().year
+    search_date = f"{year}-{month:02d}-%"
+    conn = get_connection()
+    cursor = conn.cursor()
+    query = """
+    SELECT * FROM transactions
+    WHERE date LIKE ?
+    ORDER BY date ASC
+    """
+    cursor.execute(query, (search_date,))
+    rows = cursor.fetchall()
 
     return [
         Transaction(
