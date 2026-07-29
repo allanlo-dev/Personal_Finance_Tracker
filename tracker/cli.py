@@ -6,6 +6,7 @@ from database import (
     get_all_transactions,
     get_transactions_by_month,
     get_transactions_of_last_30_days,
+    seed_demo_transactions,
 )
 from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transaction
 
@@ -176,6 +177,20 @@ def list_transactions_of_last_30_days():
     display_balance(transactions)
 
 
+def handle_seed_demo_data():
+    clear_terminal()
+    confirm = (
+        input("This will add demo transactions to the DB. Continue? (y/N): ")
+        .strip()
+        .lower()
+    )
+    if confirm != "y":
+        print("  Cancelled.")
+        return
+    count = seed_demo_transactions()
+    print(f"\n  ✓ {count} demo transactions inserted.")
+
+
 def run():
     display_header()
     while True:
@@ -190,6 +205,8 @@ def run():
             list_transactions_of_last_30_days()
         elif choice == "4":
             handle_transactions_by_month()
+        elif choice == "5":
+            handle_seed_demo_data()
         elif choice == "0":
             print("\nGoodbye!\n")
             break
