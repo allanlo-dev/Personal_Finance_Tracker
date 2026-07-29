@@ -37,12 +37,13 @@ pip install -r requirements.txt
 
 # Run the app
 python main.py
+
+#(OPTIONAL)Choice the number 5 to Add Demo Data in the database to Test
 ```
 
 ## Demo Data
 
-To try the app with a database that already has history, use the seeder in
-`database.py`. It fills the range `2026-01-01` through today with:
+To try the app with a database that already has history, use  |5. Add Demo Transactions to Test|  in the menu. It fills the range `2026-01-01` through today with:
 
 | Type    | Amount  | Category      | When                                   |
 |---------|---------|---------------|----------------------------------------|
@@ -51,12 +52,7 @@ To try the app with a database that already has history, use the seeder in
 | Expense | 500     | Rent          | 29th of each month                     |
 | Expense | 50–200  | Food          | 2 random days per month                |
 
-```python
-from database import initialize_db, seed_demo_transactions
 
-initialize_db()
-seed_demo_transactions()  # returns the number of rows inserted
-```
 
 Notes:
 - Amounts and the random Food dates are seeded from a fixed value, so repeated
