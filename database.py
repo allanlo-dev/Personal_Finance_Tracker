@@ -118,7 +118,7 @@ def get_transactions_by_month(month: int):
     query = """
     SELECT * FROM transactions
     WHERE date LIKE ?
-    ORDER BY date ASC
+    ORDER BY date ASC;
     """
     cursor.execute(query, (search_date,))
     rows = cursor.fetchall()

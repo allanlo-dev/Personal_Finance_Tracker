@@ -8,10 +8,10 @@ A command-line application to track personal expenses and income, built with Pyt
 - List all transactions in a clean table view
 - Filter transactions by month
 - Filter transactions of the last 30 days
+- Monthly balance summary (income vs expenses)
 
 ## Planned Features
 - Filter transactions by date range or month
-- Monthly balance summary (income vs expenses)
 - Summary breakdown by category
 - Show balance in charts
 - REST API with FastAPI (v2)

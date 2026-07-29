@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from database import (
@@ -7,6 +8,10 @@ from database import (
     get_transactions_of_last_30_days,
 )
 from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transaction
+
+
+def clear_terminal():
+    os.system("cls" if os.name == "nt" else "clear")
 
 
 def display_header():
@@ -22,6 +27,26 @@ def display_menu():
     print("  3. List transactions of last 30 days")
     print("  4. List transactions by month")
     print("  0. Exit")
+
+
+def display_balance(transactions):
+    exp_transactions = 0
+    inc_transactions = 0
+
+    for t in transactions:
+        if t.type == "Income":
+            inc_transactions += t.amount
+
+        else:
+            exp_transactions += t.amount
+
+    print("\n\n" + "=" * 40)
+    print("             |BALANCE|")
+    print("=" * 40 + "\n")
+
+    print(f"The Total Income is: {inc_transactions}")
+    print(f"The Total Expense is: {exp_transactions}")
+    print(f"The Balance is: {inc_transactions - exp_transactions} \n")
 
 
 def diplay_transactions(transactions):
@@ -127,22 +152,28 @@ def handle_add_transaction():
 
 
 def handle_transactions_by_month():
+    clear_terminal()
     month = prompt_month()
     transactions = get_transactions_by_month(month)
 
     diplay_transactions(transactions)
+    display_balance(transactions)
 
 
 def handle_list_transactions():
+    clear_terminal()
     transactions = get_all_transactions()
 
     diplay_transactions(transactions)
+    display_balance(transactions)
 
 
 def list_transactions_of_last_30_days():
+    clear_terminal()
     transactions = get_transactions_of_last_30_days()
 
     diplay_transactions(transactions)
+    display_balance(transactions)
 
 
 def run():
