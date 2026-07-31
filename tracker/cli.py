@@ -27,6 +27,7 @@ def display_menu():
     print("  2. List all transactions")
     print("  3. List transactions of last 30 days")
     print("  4. List transactions by month")
+    print("  5. Add Demo Transactions to Test")
     print("  0. Exit")
 
 
