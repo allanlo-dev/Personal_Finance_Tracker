@@ -4,6 +4,7 @@ from datetime import datetime
 from database import (
     add_transaction,
     get_all_transactions,
+    get_transactions_by_category,
     get_transactions_by_month,
     get_transactions_of_last_30_days,
     seed_demo_transactions,
@@ -27,7 +28,8 @@ def display_menu():
     print("  2. List all transactions")
     print("  3. List transactions of last 30 days")
     print("  4. List transactions by month")
-    print("  5. Add Demo Transactions to Test")
+    print("  5. List all transactions form a categorie")
+    print("  6. Add Demo Transactions to Test")
     print("  0. Exit")
 
 
@@ -51,7 +53,7 @@ def display_balance(transactions):
     print(f"The Balance is: {inc_transactions - exp_transactions} \n")
 
 
-def diplay_transactions(transactions):
+def display_transactions(transactions):
     if not transactions:
         print("\n  No transactions found.")
         return
@@ -118,6 +120,26 @@ def prompt_note() -> str:
     return note
 
 
+def promp_year() -> int:
+    while True:
+        year_inp = input("Type the Year :  ").strip()
+        if year_inp.isdigit():
+            year = int(year_inp)
+            break
+        print(f"{year_inp} is an Ivalid Year! || Please type a valid Year")
+    return year
+
+
+def promp_day() -> int:
+    while True:
+        day_inp = input("Type a Day(1-31) :  ").strip()
+        if day_inp.isdigit():
+            day = int(day_inp)
+            break
+        print(f"{day_inp} is an Ivalid Day! || Please type a valid Day")
+    return day
+
+
 def prompt_month() -> int:
     while True:
         month_inp = input("Select the Month(1-12):  ").strip()
@@ -158,7 +180,7 @@ def handle_transactions_by_month():
     month = prompt_month()
     transactions = get_transactions_by_month(month)
 
-    diplay_transactions(transactions)
+    display_transactions(transactions)
     display_balance(transactions)
 
 
@@ -166,7 +188,7 @@ def handle_list_transactions():
     clear_terminal()
     transactions = get_all_transactions()
 
-    diplay_transactions(transactions)
+    display_transactions(transactions)
     display_balance(transactions)
 
 
@@ -174,8 +196,20 @@ def list_transactions_of_last_30_days():
     clear_terminal()
     transactions = get_transactions_of_last_30_days()
 
-    diplay_transactions(transactions)
+    display_transactions(transactions)
     display_balance(transactions)
+
+
+def handle_transactions_by_category():
+    clear_terminal()
+    t_type = prompt_type()
+    if t_type == "Income":
+        category = prompt_income_category()
+    else:
+        category = prompt_expense_category()
+
+    transactions = get_transactions_by_category(category)
+    display_transactions(transactions)
 
 
 def handle_seed_demo_data():
@@ -207,6 +241,8 @@ def run():
         elif choice == "4":
             handle_transactions_by_month()
         elif choice == "5":
+            handle_transactions_by_category()
+        elif choice == "6":
             handle_seed_demo_data()
         elif choice == "0":
             print("\nGoodbye!\n")

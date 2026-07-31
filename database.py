@@ -112,6 +112,30 @@ def get_transactions_of_last_30_days():
     ]
 
 
+def get_transactions_by_category(category):
+    conn = get_connection()
+    cursor = conn.cursor()
+    query = """
+    SELECT * FROM transactions
+    WHERE category LIKE ?
+    ORDER BY date ASC
+    """
+    cursor.execute(query, (category,))
+    rows = cursor.fetchall()
+
+    return [
+        Transaction(
+            id=row["id"],
+            type=row["type"],
+            amount=row["amount"],
+            category=row["category"],
+            note=row["note"],
+            date=row["date"],
+        )
+        for row in rows
+    ]
+
+
 def get_transactions_by_month(month: int):
     year = datetime.now().year
     search_date = f"{year}-{month:02d}-%"
