@@ -11,6 +11,8 @@ from database import (
 )
 from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transaction
 
+from .charts import generate_chart_by_month
+
 
 def clear_terminal():
     os.system("cls" if os.name == "nt" else "clear")
@@ -182,6 +184,7 @@ def handle_transactions_by_month():
 
     display_transactions(transactions)
     display_balance(transactions)
+    generate_chart_by_month(transactions)
 
 
 def handle_list_transactions():
