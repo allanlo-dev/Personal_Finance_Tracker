@@ -1,4 +1,5 @@
 import os
+import subprocess
 from datetime import datetime
 
 from database import (
@@ -9,22 +10,21 @@ from database import (
     get_transactions_of_last_30_days,
     seed_demo_transactions,
 )
+from tracker.charts import generate_chart_by_month
 from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transaction
 
-from .charts import generate_chart_by_month
+
+def clear_terminal() -> None:
+    subprocess.run(["cls"] if os.name == "nt" else ["clear"], shell=False) # noqa: S603 -No external input is used in a safe way
 
 
-def clear_terminal():
-    os.system("cls" if os.name == "nt" else "clear")
-
-
-def display_header():
+def display_header() -> None:
     print("\n" + "=" * 40)
     print("   Personal Finance Tracker (PCT)")
     print("=" * 40)
 
 
-def display_menu():
+def display_menu() -> None:
     print("\nWhat do you want to do?")
     print("  1. Add transaction")
     print("  2. List all transactions")
@@ -35,9 +35,9 @@ def display_menu():
     print("  0. Exit")
 
 
-def display_balance(transactions):
-    exp_transactions = 0
-    inc_transactions = 0
+def display_balance(transactions: list[Transaction]) -> None:
+    exp_transactions: float = 0
+    inc_transactions: float = 0
 
     for t in transactions:
         if t.type == "Income":
@@ -55,7 +55,7 @@ def display_balance(transactions):
     print(f"The Balance is: {inc_transactions - exp_transactions} \n")
 
 
-def display_transactions(transactions):
+def display_transactions(transactions: list[Transaction]) -> None:
     if not transactions:
         print("\n  No transactions found.")
         return
@@ -152,7 +152,7 @@ def prompt_month() -> int:
     return month
 
 
-def handle_add_transaction():
+def handle_add_transaction() -> None:
     print("\n--- New Transaction ---")
     t_type = prompt_type()
     amount = prompt_amount()
@@ -177,7 +177,7 @@ def handle_add_transaction():
     print(f"    {t_type.upper()} | ${amount:.2f} | {category} | {today}")
 
 
-def handle_transactions_by_month():
+def handle_transactions_by_month() -> None:
     clear_terminal()
     month = prompt_month()
     transactions = get_transactions_by_month(month)
@@ -187,7 +187,7 @@ def handle_transactions_by_month():
     generate_chart_by_month(transactions)
 
 
-def handle_list_transactions():
+def handle_list_transactions() -> None:
     clear_terminal()
     transactions = get_all_transactions()
 
@@ -195,7 +195,7 @@ def handle_list_transactions():
     display_balance(transactions)
 
 
-def list_transactions_of_last_30_days():
+def list_transactions_of_last_30_days() -> None:
     clear_terminal()
     transactions = get_transactions_of_last_30_days()
 
@@ -203,7 +203,7 @@ def list_transactions_of_last_30_days():
     display_balance(transactions)
 
 
-def handle_transactions_by_category():
+def handle_transactions_by_category() -> None:
     clear_terminal()
     t_type = prompt_type()
     if t_type == "Income":
@@ -215,7 +215,7 @@ def handle_transactions_by_category():
     display_transactions(transactions)
 
 
-def handle_seed_demo_data():
+def handle_seed_demo_data() -> None:
     clear_terminal()
     confirm = (
         input("This will add demo transactions to the DB. Continue? (y/N): ")
@@ -229,7 +229,7 @@ def handle_seed_demo_data():
     print(f"\n  ✓ {count} demo transactions inserted.")
 
 
-def run():
+def run() -> None:
     display_header()
     while True:
         display_menu()

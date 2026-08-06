@@ -8,14 +8,14 @@ from tracker.models import Transaction
 DB_NAME = "pct.db"
 
 
-def get_connection():
+def get_connection() -> sqlite3.Connection:
     """Returns a connection to the SQLite database."""
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row  # allows accessing columns by name
     return conn
 
 
-def initialize_db():
+def initialize_db() -> None:
     """Creates the transactions table if it doesn't exist."""
     conn = get_connection()
     cursor = conn.cursor()
@@ -57,6 +57,9 @@ def add_transaction(transaction: Transaction) -> int:
     new_id = cursor.lastrowid
     conn.commit()
     conn.close()
+    if new_id is None:
+        raise ValueError("ID was not generated for the new transaction.")
+    int(new_id)
     return new_id
 
 
@@ -87,7 +90,7 @@ def get_all_transactions() -> list[Transaction]:
     ]
 
 
-def get_transactions_of_last_30_days():
+def get_transactions_of_last_30_days() -> list[Transaction]:
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -112,7 +115,7 @@ def get_transactions_of_last_30_days():
     ]
 
 
-def get_transactions_by_category(category):
+def get_transactions_by_category(category: str) -> list[Transaction]:
     conn = get_connection()
     cursor = conn.cursor()
     query = """
@@ -136,7 +139,7 @@ def get_transactions_by_category(category):
     ]
 
 
-def get_transactions_by_month(month: int):
+def get_transactions_by_month(month: int) -> list[Transaction]:
     year = datetime.now().year
     search_date = f"{year}-{month:02d}-%"
     conn = get_connection()
@@ -182,12 +185,12 @@ def seed_demo_transactions(
     if start > end:
         raise ValueError("start must be on or before end")
 
-    rng = random.Random(seed)  # same data on every run
+    rng = random.Random(seed)  # noqa: S311 -same data on every run
     rows: list[Transaction] = []
 
     def add(
         day: int, t_type: str, amount: float, category: str, note: str, y: int, m: int
-    ):
+    ) -> None:
         day = min(day, monthrange(y, m)[1])  # e.g. 29 -> 28 in Feb 2026
         d = date(y, m, day)
         if start <= d <= end:

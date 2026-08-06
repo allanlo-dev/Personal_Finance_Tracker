@@ -1,11 +1,13 @@
 import matplotlib.pyplot as plt
 
+from tracker.models import Transaction
 
-def generate_chart_by_month(trans):
+
+def generate_chart_by_month(trans: list[Transaction]) -> None:
     transactions = trans
 
-    exp_transactions = 0
-    inc_transactions = 0
+    exp_transactions: float = 0
+    inc_transactions: float = 0
     income = []
     expense = []
 

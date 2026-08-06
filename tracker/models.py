@@ -23,4 +23,4 @@ class Transaction:
     category: str
     note: str
     date: str  # ISO format: YYYY-MM-DD
-    id: int = None
+    id: int | None = None
