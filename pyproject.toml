@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-persoanl-finance-tracker = "persoanl_finance_tracker:main"
+personal-finance-tracker = "personal_finance_tracker:main"
 
 [build-system]
 requires = ["uv_build>=0.12.2,<0.13.0"]
