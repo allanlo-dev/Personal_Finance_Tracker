@@ -6,26 +6,24 @@ from tracker.models import Transaction
 def generate_chart_by_month(trans: list[Transaction]) -> None:
     transactions = trans
 
-    exp_transactions: float = 0
-    inc_transactions: float = 0
-    income = []
-    expense = []
-
+    icnometotals :dict[str,float] = {}
+    expensetotals :dict[str,float] = {}
     for t in transactions:
+        cat :str= t.category
         if t.type == "Income":
-            inc_transactions += t.amount
+            icnometotals[cat] = icnometotals.get(cat, 0) +t.amount
         else:
-            exp_transactions += t.amount
+            expensetotals[cat] = expensetotals.get(cat, 0) +t.amount
 
-    income.append(inc_transactions)
-    expense.append(exp_transactions)
+    fig, ax = plt.subplots(figsize=(10, 5), layout ="constrained")
+    plt.style.use("ggplot")
+    ax.bar(list(icnometotals.keys()), list(icnometotals.values()))
 
-    fig, ax = plt.subplots(figsize=(10, 5))
-
-    ax.bar(6, income, label="Incomes")
-    ax.bar(6, expense, label="Expenses")
-
-    ax.set_title("Monthly Balance")
-    ax.legend()
+    ax.set_title("Incomes")
     ax.grid(True)
     plt.show()
+    plt.close(fig)
+
+
+if __name__ == "__main__":
+    pass

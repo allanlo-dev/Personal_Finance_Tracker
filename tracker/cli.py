@@ -1,5 +1,4 @@
 import os
-import subprocess
 from datetime import datetime
 
 from database import (
@@ -15,7 +14,7 @@ from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transac
 
 
 def clear_terminal() -> None:
-    subprocess.run(["cls"] if os.name == "nt" else ["clear"], shell=False) # noqa: S603 -No external input is used in a safe way
+    os.system("cls" if os.name == "nt" else "clear")  # noqa: S605  -No external input is used in a safe way
 
 
 def display_header() -> None:
