@@ -9,7 +9,7 @@ from database import (
     get_transactions_of_last_30_days,
     seed_demo_transactions,
 )
-from tracker.charts import generate_mosaic_chart, get_charts_data
+from tracker.charts import get_charts_data, generate_mosaic_chart
 from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transaction
 
 
@@ -183,7 +183,7 @@ def handle_transactions_by_month() -> None:
 
     display_transactions(transactions)
     display_balance(transactions)
-    totals, incometotals, expensetotals = get_charts_data(transactions)
+    totals, incometotals, expensetotals =get_charts_data(transactions)
     generate_mosaic_chart(totals, incometotals, expensetotals)
 
 
@@ -193,7 +193,7 @@ def handle_list_transactions() -> None:
 
     display_transactions(transactions)
     display_balance(transactions)
-    totals, incometotals, expensetotals = get_charts_data(transactions)
+    totals, incometotals, expensetotals =get_charts_data(transactions)
     generate_mosaic_chart(totals, incometotals, expensetotals)
 
 
@@ -203,7 +203,7 @@ def list_transactions_of_last_30_days() -> None:
 
     display_transactions(transactions)
     display_balance(transactions)
-    totals, incometotals, expensetotals = get_charts_data(transactions)
+    totals, incometotals, expensetotals =get_charts_data(transactions)
     generate_mosaic_chart(totals, incometotals, expensetotals)
 
 
@@ -217,6 +217,7 @@ def handle_transactions_by_category() -> None:
 
     transactions = get_transactions_by_category(category)
     display_transactions(transactions)
+    
 
 
 def handle_seed_demo_data() -> None:
