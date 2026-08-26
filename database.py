@@ -4,15 +4,16 @@ from calendar import monthrange
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
+from pathlib import Path
 
 from tracker.models import Transaction
 
-DB_NAME = "pct.db"
+DB_NAME = Path(__file__).parent / "pct.db"
 
 
 @contextmanager
-def get_connection() -> Iterator[sqlite3.Connection]:
-    conn = sqlite3.connect(DB_NAME)
+def get_connection(db_path: str | Path = DB_NAME) -> Iterator[sqlite3.Connection]:
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     try:
         yield conn
@@ -71,7 +72,6 @@ def add_transaction(transaction: Transaction) -> int:
         new_id = cursor.lastrowid
         if new_id is None:
             raise ValueError("ID was not generated for the new transaction.")
-        int(new_id)
 
     return new_id
 

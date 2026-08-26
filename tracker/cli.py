@@ -42,14 +42,13 @@ def display_menu() -> None:
 
 def calculate_balance(transactions: list[Transaction]) -> tuple[float, float, float]:
     income = sum(t.amount for t in transactions if t.type == "Income")
-    expense = sum(t.amount for t in transactions if t.type != "Income")
+    expense = sum(t.amount for t in transactions if t.type == "Expense")
     balance = income - expense
     return income, expense, balance
 
 
 def display_balance(transactions: list[Transaction]) -> None:
-    trans = transactions
-    income, expense, balance = calculate_balance(trans)
+    income, expense, balance = calculate_balance(transactions)
     print("\n\n" + "=" * 40)
     print("             |BALANCE|")
     print("=" * 40 + "\n")
