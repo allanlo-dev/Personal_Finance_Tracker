@@ -1,4 +1,4 @@
-# Personal Finance Tracker (PCT)
+# Personal Finance Tracker (PFT)
 
 A command-line application to track personal expenses and income, built with Python and SQLite.
 
@@ -12,7 +12,6 @@ A command-line application to track personal expenses and income, built with Pyt
 - Demo data seeder to populate the database for testing
 
 ## Planned Features
-- Filter transactions by date range
 - Summary breakdown by category
 - Show balance in charts
 - REST API with FastAPI (v2)

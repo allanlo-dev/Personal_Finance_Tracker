@@ -5,11 +5,17 @@ from database import (
     add_transaction,
     get_all_transactions,
     get_transactions_by_category,
-    get_transactions_by_month,
+    get_transactions_by_date,
+    get_transactions_by_type,
     get_transactions_of_last_30_days,
     seed_demo_transactions,
 )
-from tracker.charts import generate_mosaic_chart, get_charts_data
+from tracker.charts import (
+    generate_chart,
+    generate_mosaic_chart,
+    get_charts_data,
+    get_mosaic_charts_data,
+)
 from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transaction
 
 
@@ -24,34 +30,33 @@ def display_header() -> None:
 
 
 def display_menu() -> None:
-    print("\nWhat do you want to do?")
+    print("\n\nWhat do you want to do?")
     print("  1. Add transaction")
     print("  2. List all transactions")
     print("  3. List transactions of last 30 days")
-    print("  4. List transactions by month")
-    print("  5. List all transactions from a category")
+    print("  4. List transactions by Date")
+    print("  5. List transactions by Type/Category")
     print("  6. Add Demo Transactions to Test")
     print("  0. Exit")
 
 
+def calculate_balance(transactions: list[Transaction]) -> tuple[float, float, float]:
+    income = sum(t.amount for t in transactions if t.type == "Income")
+    expense = sum(t.amount for t in transactions if t.type != "Income")
+    balance = income - expense
+    return income, expense, balance
+
+
 def display_balance(transactions: list[Transaction]) -> None:
-    exp_transactions: float = 0
-    inc_transactions: float = 0
-
-    for t in transactions:
-        if t.type == "Income":
-            inc_transactions += t.amount
-
-        else:
-            exp_transactions += t.amount
-
+    trans = transactions
+    income, expense, balance = calculate_balance(trans)
     print("\n\n" + "=" * 40)
     print("             |BALANCE|")
     print("=" * 40 + "\n")
 
-    print(f"The Total Income is: {inc_transactions}")
-    print(f"The Total Expense is: {exp_transactions}")
-    print(f"The Balance is: {inc_transactions - exp_transactions} \n")
+    print(f"The Total Income is: {income}")
+    print(f"The Total Expense is: {expense}")
+    print(f"The Balance is: {balance} \n")
 
 
 def display_transactions(transactions: list[Transaction]) -> None:
@@ -59,6 +64,9 @@ def display_transactions(transactions: list[Transaction]) -> None:
         print("\n  No transactions found.")
         return
 
+    print("\n" + "=" * 70)
+    print("                     ||TRANSACTIONS||")
+    print("=" * 70 + "\n")
     print(f"\n{'ID':<5} {'Date':<12} {'Type':<10} {'Amount':<10} {'Category':<18} Note")
     print("-" * 70)
 
@@ -151,6 +159,73 @@ def prompt_month() -> int:
     return month
 
 
+def prompt_date_range() -> tuple[str, str]:
+    print("\nEnter the start date:")
+    start_year = promp_year()
+    start_month = prompt_month()
+    start_day = promp_day()
+    start_date = f"{start_year}-{start_month:02d}-{start_day:02d}"
+
+    print("\nEnter the end date:")
+    end_year = promp_year()
+    end_month = prompt_month()
+    end_day = promp_day()
+    end_date = f"{end_year}-{end_month:02d}-{end_day:02d}"
+
+    return (start_date, end_date)
+
+
+def search_by_date_menu() -> str:
+    print("\nSearch Transactions by:")
+    while True:
+        print("1. a Specific Date")
+        print("2. a Specific Month")
+        print("3. a Specific Year")
+
+        date_choice = input("\nChoose a date filter: ").strip()
+
+        if date_choice.isdigit() and date_choice == "1":
+            year = promp_year()
+            month = prompt_month()
+            day = promp_day()
+            search_date = f"{year}-{month:02d}-{day:02d}"
+            break
+        elif date_choice.isdigit() and date_choice == "2":
+            year = promp_year()
+            month = prompt_month()
+            search_date = f"{year}-{month:02d}-%"
+            break
+        elif date_choice.isdigit() and date_choice == "3":
+            year = promp_year()
+            search_date = f"{year}-%-%"
+            break
+        else:
+            print("  Invalid option. Try again.")
+
+    return search_date
+
+
+def search_by_type_category_menu() -> str:
+    print("\nSearch Transactions by:")
+    type = prompt_type()
+    while True:
+        print("\n\nDo you want to filter by a specific category?")
+        print("1. Yes")
+        print(f"2. No. List all transaction by: {type}")
+        type_choice = input("\nChoose an option: ").strip()
+        if type_choice.isdigit() and type_choice == "1":
+            category = (
+                prompt_income_category()
+                if type == "Income"
+                else prompt_expense_category()
+            )
+            return category
+        elif type_choice.isdigit() and type_choice == "2":
+            return type
+        else:
+            print("  Invalid option. Try again.")
+
+
 def handle_add_transaction() -> None:
     print("\n--- New Transaction ---")
     t_type = prompt_type()
@@ -176,47 +251,66 @@ def handle_add_transaction() -> None:
     print(f"    {t_type.upper()} | ${amount:.2f} | {category} | {today}")
 
 
-def handle_transactions_by_month() -> None:
-    clear_terminal()
-    month = prompt_month()
-    transactions = get_transactions_by_month(month)
-
-    display_transactions(transactions)
-    display_balance(transactions)
-    totals, incometotals, expensetotals = get_charts_data(transactions)
-    generate_mosaic_chart(totals, incometotals, expensetotals)
-
-
 def handle_list_transactions() -> None:
     clear_terminal()
     transactions = get_all_transactions()
 
     display_transactions(transactions)
-    display_balance(transactions)
-    totals, incometotals, expensetotals = get_charts_data(transactions)
-    generate_mosaic_chart(totals, incometotals, expensetotals)
+    if transactions:
+        display_balance(transactions)
+        totals, incometotals, expensetotals = get_mosaic_charts_data(transactions)
+        generate_mosaic_chart(
+            totals, incometotals, expensetotals, filter="All Transactions"
+        )
 
 
-def list_transactions_of_last_30_days() -> None:
+def handle_transactions_by_date() -> None:
+    clear_terminal()
+    search_date = search_by_date_menu()
+    transactions = get_transactions_by_date(search_date)
+    display_transactions(transactions)
+    if transactions:
+        display_balance(transactions)
+        totals, incometotals, expensetotals = get_mosaic_charts_data(transactions)
+        generate_mosaic_chart(
+            totals, incometotals, expensetotals, filter=f"Transactions of {search_date}"
+        )
+
+
+def handle_transactions_of_last_30_days() -> None:
     clear_terminal()
     transactions = get_transactions_of_last_30_days()
 
     display_transactions(transactions)
-    display_balance(transactions)
-    totals, incometotals, expensetotals = get_charts_data(transactions)
-    generate_mosaic_chart(totals, incometotals, expensetotals)
+    if transactions:
+        display_balance(transactions)
+        totals, incometotals, expensetotals = get_mosaic_charts_data(transactions)
+        generate_mosaic_chart(
+            totals, incometotals, expensetotals, filter="Transactions of Last 30 Days"
+        )
 
 
-def handle_transactions_by_category() -> None:
+def handle_transactions_by_type_category() -> None:
     clear_terminal()
-    t_type = prompt_type()
-    if t_type == "Income":
-        category = prompt_income_category()
+    search_type_category = search_by_type_category_menu()
+    if search_type_category in TYPES:
+        type = search_type_category
+        transactions = get_transactions_by_type(type)
     else:
-        category = prompt_expense_category()
+        category = search_type_category
+        transactions = get_transactions_by_category(category)
 
-    transactions = get_transactions_by_category(category)
     display_transactions(transactions)
+    total: float = 0
+    for t in transactions:
+        total += t.amount
+    if transactions:
+        totals, datetotals = get_charts_data(transactions, filter=search_type_category)
+        print("\n" + "=" * 40)
+        print("               |TOTAL|")
+        print("=" * 40 + "\n")
+        print(f"The Total is: {total}\n")
+        generate_chart(totals, datetotals, filter=search_type_category)
 
 
 def handle_seed_demo_data() -> None:
@@ -244,11 +338,11 @@ def run() -> None:
         elif choice == "2":
             handle_list_transactions()
         elif choice == "3":
-            list_transactions_of_last_30_days()
+            handle_transactions_of_last_30_days()
         elif choice == "4":
-            handle_transactions_by_month()
+            handle_transactions_by_date()
         elif choice == "5":
-            handle_transactions_by_category()
+            handle_transactions_by_type_category()
         elif choice == "6":
             handle_seed_demo_data()
         elif choice == "0":

@@ -21,6 +21,6 @@ class Transaction:
     type: str  # 'Expense' or 'Income'
     amount: float
     category: str
-    note: str
+    note: str | None
     date: str  # ISO format: YYYY-MM-DD
     id: int | None = None

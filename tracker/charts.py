@@ -1,24 +1,56 @@
 import matplotlib.pyplot as plt
 
-from tracker.models import Transaction
+from tracker.models import INCOME_CATEGORIES, TYPES, Transaction
 
 
-def generate_chart(amounts: dict[str, float]) -> None:
+def generate_chart(
+    totals: dict[str, float], datetotals: dict[str, float], filter: str | None
+) -> None:
     plt.style.use("ggplot")
-    fig, ax = plt.subplots(figsize=(10, 5), layout="constrained")
-    barras = ax.bar(
-        list(amounts.keys()),
-        list(amounts.values()),
-        color="#2DBDB1",
-        edgecolor="black",
-        width=0.6,
-    )
-    ax.bar_label(barras, fmt="${:,.0f}", padding=3)
+    colors = [
+        "#2DBDB1" if filter in INCOME_CATEGORIES or filter == TYPES[0] else "#D23917"
+    ]
+    fig, axs = plt.subplots(1, 2, figsize=(11, 5), layout="constrained")
+    fig.suptitle(f"{filter} Transactions", fontweight="bold", fontsize=18)
 
-    ax.set_title("Income and Expenses", fontweight="bold", fontsize=16)
-    ax.grid(True)
-    ax.set_axisbelow(True)
-    ax.spines[["top", "right"]].set_visible(False)
+    totalbar = axs[0].bar(
+        list(totals.keys()),
+        list(totals.values()),
+        color=colors,
+        edgecolor="black",
+        width=0.3,
+    )
+    axs[0].bar_label(totalbar, fmt="${:,.0f}", padding=4)
+    axs[0].set_title("Total", fontweight="bold", fontsize=16)
+
+    axs[1].plot(
+        list(datetotals.keys()),
+        list(datetotals.values()),
+        marker="o",
+        drawstyle="steps-post",
+        color="#2DBDB1"
+        if filter in INCOME_CATEGORIES or filter == TYPES[0]
+        else "#D23917",
+    )
+    for date, amount in datetotals.items():
+        axs[1].annotate(
+            f"${amount:,.0f}",
+            xy=(date, amount),
+            xytext=(-13, 3),
+            textcoords="offset points",
+            ha="center",
+            fontsize=9,
+        )
+    axs[1].set_title("Date of Transactions", fontweight="bold", fontsize=16)
+    axs[1].set_xlabel("(YY-MM-DD)")
+    fig.autofmt_xdate()
+
+    for ax in axs:
+        ax.set_ylabel("Monto ($)")
+        ax.spines[["top", "right"]].set_visible(False)
+        ax.grid(True)
+        ax.set_axisbelow(True)
+
     plt.show()
     plt.close(fig)
 
@@ -27,6 +59,7 @@ def generate_mosaic_chart(
     totals: dict[str, float],
     incometotals: dict[str, float],
     expensetotals: dict[str, float],
+    filter: str | None,
 ) -> None:
 
     plt.style.use("ggplot")
@@ -37,7 +70,7 @@ def generate_mosaic_chart(
     colors = ["#2DBDB1" if t == "Income" else "#D23917" for t in totals]
 
     fig, axd = plt.subplot_mosaic(mosaic, figsize=(10, 5), layout="constrained")
-
+    fig.suptitle(f"{filter}", fontweight="bold", fontsize=18)
     totalsbar = axd["A"].bar(
         list(totals.keys()),
         list(totals.values()),
@@ -79,6 +112,34 @@ def generate_mosaic_chart(
 
 
 def get_charts_data(
+    trans: list[Transaction],
+    filter: str,
+) -> tuple[dict[str, float], dict[str, float]]:
+    transactions = trans
+    typetotals: dict[str, float] = {}
+    categorytotals: dict[str, float] = {}
+    datetotals: dict[str, float] = {}
+
+    if filter in TYPES:
+        for t in transactions:
+            typ: str = t.type
+            typetotals[typ] = typetotals.get(typ, 0) + t.amount
+
+            date = t.date
+            datetotals[date] = datetotals.get(date, 0) + t.amount
+        return typetotals, datetotals
+
+    else:
+        for t in transactions:
+            cat: str = t.category
+            categorytotals[cat] = categorytotals.get(cat, 0) + t.amount
+
+            date = t.date
+            datetotals[date] = datetotals.get(date, 0) + t.amount
+        return categorytotals, datetotals
+
+
+def get_mosaic_charts_data(
     trans: list[Transaction],
 ) -> tuple[dict[str, float], dict[str, float], dict[str, float]]:
     transactions = trans
