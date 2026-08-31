@@ -67,7 +67,10 @@ def generate_mosaic_chart(
     AB
     AC
     """
-    colors = ["#2DBDB1" if t == "Income" else "#D23917" for t in totals]
+    colors = [
+        "#2DBDB1" if t == "Income" else "#D23917" if t == "Expense" else "#1FC519"
+        for t in totals
+    ]
 
     fig, axd = plt.subplot_mosaic(mosaic, figsize=(10, 5), layout="constrained")
     fig.suptitle(f"{filter}", fontweight="bold", fontsize=18)
@@ -147,16 +150,19 @@ def get_mosaic_charts_data(
     totals: dict[str, float] = {}
     incometotals: dict[str, float] = {}
     expensetotals: dict[str, float] = {}
+    balance: float = 0
     for t in transactions:
         cat: str = t.category
         typ: str = t.type
         totals[typ] = totals.get(typ, 0) + t.amount
         if t.type == "Income":
             incometotals[cat] = incometotals.get(cat, 0) + t.amount
-
+            balance += t.amount
         else:
             expensetotals[cat] = expensetotals.get(cat, 0) + t.amount
+            balance -= t.amount
 
+    totals["Balance"] = balance
     return totals, incometotals, expensetotals
 
 

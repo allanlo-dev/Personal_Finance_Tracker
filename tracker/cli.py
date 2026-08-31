@@ -47,6 +47,21 @@ def calculate_balance(transactions: list[Transaction]) -> tuple[float, float, fl
     return income, expense, balance
 
 
+def display_chart() -> bool:
+    while True:
+        print("Do you want to display this data in a chart?")
+        print("1. Yes")
+        print("2. No")
+        choice = input("=> ").strip()
+        if choice.isdigit() and choice == "1":
+            return True
+
+        elif choice.isdigit() and choice == "2":
+            return False
+        else:
+            print("Invalid option. Please select 1 or 2.")
+
+
 def display_balance(transactions: list[Transaction]) -> None:
     income, expense, balance = calculate_balance(transactions)
     print("\n\n" + "=" * 40)
@@ -126,6 +141,17 @@ def prompt_expense_category() -> str:
 def prompt_note() -> str:
     note = input("Note (optional, press Enter to skip): ").strip()
     return note
+
+
+def prompt_date() -> str:
+    while True:
+        date = input("Type the Date (YYYY-MM-DD Ej 2026-01-15):  ").strip()
+        try:
+            checked_date = datetime.strptime(date, "%Y-%m-%d")
+            print(f"✓ Date Saved {date}")
+            return checked_date.strftime("%Y-%m-%d")
+        except ValueError:
+            print("X Error: Type a valid date or use the correct format (YYYY-MM-DD)\n")
 
 
 def promp_year() -> int:
@@ -235,32 +261,35 @@ def handle_add_transaction() -> None:
         category = prompt_expense_category()
 
     note = prompt_note()
-    today = datetime.now().astimezone().date().isoformat()
+
+    date = prompt_date()
+    # today = datetime.now().astimezone().date().isoformat()
 
     transaction = Transaction(
         type=t_type,
         amount=amount,
         category=category,
         note=note,
-        date=today,
+        date=date,
     )
 
     new_id = add_transaction(transaction)
     print(f"\n  ✓ Transaction saved (ID: {new_id})")
-    print(f"    {t_type.upper()} | ${amount:.2f} | {category} | {today}")
+    print(f"    {t_type.upper()} | ${amount:.2f} | {category} | {date}")
 
 
-def handle_list_transactions() -> None:
+def handle_all_transactions() -> None:
     clear_terminal()
     transactions = get_all_transactions()
 
     display_transactions(transactions)
     if transactions:
         display_balance(transactions)
-        totals, incometotals, expensetotals = get_mosaic_charts_data(transactions)
-        generate_mosaic_chart(
-            totals, incometotals, expensetotals, filter="All Transactions"
-        )
+        if display_chart():
+            totals, incometotals, expensetotals = get_mosaic_charts_data(transactions)
+            generate_mosaic_chart(
+                totals, incometotals, expensetotals, filter="All Transactions"
+            )
 
 
 def handle_transactions_by_date() -> None:
@@ -270,10 +299,14 @@ def handle_transactions_by_date() -> None:
     display_transactions(transactions)
     if transactions:
         display_balance(transactions)
-        totals, incometotals, expensetotals = get_mosaic_charts_data(transactions)
-        generate_mosaic_chart(
-            totals, incometotals, expensetotals, filter=f"Transactions of {search_date}"
-        )
+        if display_chart():
+            totals, incometotals, expensetotals = get_mosaic_charts_data(transactions)
+            generate_mosaic_chart(
+                totals,
+                incometotals,
+                expensetotals,
+                filter=f"Transactions of {search_date}",
+            )
 
 
 def handle_transactions_of_last_30_days() -> None:
@@ -283,10 +316,14 @@ def handle_transactions_of_last_30_days() -> None:
     display_transactions(transactions)
     if transactions:
         display_balance(transactions)
-        totals, incometotals, expensetotals = get_mosaic_charts_data(transactions)
-        generate_mosaic_chart(
-            totals, incometotals, expensetotals, filter="Transactions of Last 30 Days"
-        )
+        if display_chart():
+            totals, incometotals, expensetotals = get_mosaic_charts_data(transactions)
+            generate_mosaic_chart(
+                totals,
+                incometotals,
+                expensetotals,
+                filter="Transactions of Last 30 Days",
+            )
 
 
 def handle_transactions_by_type_category() -> None:
@@ -304,12 +341,15 @@ def handle_transactions_by_type_category() -> None:
     for t in transactions:
         total += t.amount
     if transactions:
-        totals, datetotals = get_charts_data(transactions, filter=search_type_category)
         print("\n" + "=" * 40)
         print("               |TOTAL|")
         print("=" * 40 + "\n")
         print(f"The Total is: {total}\n")
-        generate_chart(totals, datetotals, filter=search_type_category)
+        if display_chart():
+            totals, datetotals = get_charts_data(
+                transactions, filter=search_type_category
+            )
+            generate_chart(totals, datetotals, filter=search_type_category)
 
 
 def handle_seed_demo_data() -> None:
@@ -335,7 +375,7 @@ def run() -> None:
         if choice == "1":
             handle_add_transaction()
         elif choice == "2":
-            handle_list_transactions()
+            handle_all_transactions()
         elif choice == "3":
             handle_transactions_of_last_30_days()
         elif choice == "4":
