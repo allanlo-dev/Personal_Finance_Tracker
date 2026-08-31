@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 
 from database import (
     add_transaction,
@@ -8,7 +7,6 @@ from database import (
     get_transactions_by_date,
     get_transactions_by_type,
     get_transactions_of_last_30_days,
-    seed_demo_transactions,
 )
 from tracker.charts import (
     generate_chart,
@@ -16,7 +14,18 @@ from tracker.charts import (
     get_charts_data,
     get_mosaic_charts_data,
 )
-from tracker.models import EXPENSE_CATEGORIES, INCOME_CATEGORIES, TYPES, Transaction
+from tracker.inputs import (
+    prompt_amount,
+    prompt_date,
+    prompt_day,
+    prompt_expense_category,
+    prompt_income_category,
+    prompt_month,
+    prompt_note,
+    prompt_type,
+    prompt_year,
+)
+from tracker.models import TYPES, Transaction
 
 
 def clear_terminal() -> None:
@@ -36,7 +45,6 @@ def display_menu() -> None:
     print("  3. List transactions of last 30 days")
     print("  4. List transactions by Date")
     print("  5. List transactions by Type/Category")
-    print("  6. Add Demo Transactions to Test")
     print("  0. Exit")
 
 
@@ -49,7 +57,7 @@ def calculate_balance(transactions: list[Transaction]) -> tuple[float, float, fl
 
 def display_chart() -> bool:
     while True:
-        print("Do you want to display this data in a chart?")
+        print("\nDo you want to display this data in a chart?")
         print("1. Yes")
         print("2. No")
         choice = input("=> ").strip()
@@ -92,114 +100,6 @@ def display_transactions(transactions: list[Transaction]) -> None:
         )
 
 
-def prompt_type() -> str:
-    print("\nType:")
-    for i, t in enumerate(TYPES, 1):
-        print(f"  {i}. {t}")
-    while True:
-        choice = input("Select (1-2): ").strip()
-        if choice in ("1", "2"):
-            return TYPES[int(choice) - 1]
-        print("  Invalid option. Try again.")
-
-
-def prompt_amount() -> float:
-    while True:
-        raw = input("Amount ($): ").strip()
-        try:
-            value = float(raw)
-            if value <= 0:
-                print("  Amount must be greater than 0.")
-                continue
-            return value
-        except ValueError:
-            print("  Please enter a valid number.")
-
-
-def prompt_income_category() -> str:
-    print("\nCategory:")
-    for i, cat in enumerate(INCOME_CATEGORIES, 1):
-        print(f"  {i}. {cat}")
-    while True:
-        choice = input(f"Select (1-{len(INCOME_CATEGORIES)}): ").strip()
-        if choice.isdigit() and 1 <= int(choice) <= len(INCOME_CATEGORIES):
-            return INCOME_CATEGORIES[int(choice) - 1]
-        print("  Invalid option. Try again.")
-
-
-def prompt_expense_category() -> str:
-    print("\nCategory:")
-    for i, cat in enumerate(EXPENSE_CATEGORIES, 1):
-        print(f"  {i}. {cat}")
-    while True:
-        choice = input(f"Select (1-{len(EXPENSE_CATEGORIES)}): ").strip()
-        if choice.isdigit() and 1 <= int(choice) <= len(EXPENSE_CATEGORIES):
-            return EXPENSE_CATEGORIES[int(choice) - 1]
-        print("  Invalid option. Try again.")
-
-
-def prompt_note() -> str:
-    note = input("Note (optional, press Enter to skip): ").strip()
-    return note
-
-
-def prompt_date() -> str:
-    while True:
-        date = input("Type the Date (YYYY-MM-DD Ej 2026-01-15):  ").strip()
-        try:
-            checked_date = datetime.strptime(date, "%Y-%m-%d")
-            print(f"✓ Date Saved {date}")
-            return checked_date.strftime("%Y-%m-%d")
-        except ValueError:
-            print("X Error: Type a valid date or use the correct format (YYYY-MM-DD)\n")
-
-
-def promp_year() -> int:
-    while True:
-        year_inp = input("Type the Year :  ").strip()
-        if year_inp.isdigit():
-            year = int(year_inp)
-            break
-        print(f"{year_inp} is an Ivalid Year! || Please type a valid Year")
-    return year
-
-
-def promp_day() -> int:
-    while True:
-        day_inp = input("Type a Day(1-31) :  ").strip()
-        if day_inp.isdigit():
-            day = int(day_inp)
-            break
-        print(f"{day_inp} is an Ivalid Day! || Please type a valid Day")
-    return day
-
-
-def prompt_month() -> int:
-    while True:
-        month_inp = input("Select the Month(1-12):  ").strip()
-        if month_inp.isdigit() and 1 <= int(month_inp) <= 12:
-            month = int(month_inp)
-            break
-        print("X Invalid Month. || Please select a number between 1 and 12!")
-    return month
-
-
-def prompt_date_range() -> tuple[str, str]:
-    print("\nEnter the start date:")
-    start_year = promp_year()
-    start_month = prompt_month()
-    start_day = promp_day()
-    start_date = f"{start_year}-{start_month:02d}-{start_day:02d}"
-
-    print("\nEnter the end date:")
-    end_year = promp_year()
-    end_month = prompt_month()
-    end_day = promp_day()
-    end_date = f"{end_year}-{end_month:02d}-{end_day:02d}"
-
-    return (start_date, end_date)
-
-
 def search_by_date_menu() -> str:
     print("\nSearch Transactions by:")
     while True:
@@ -210,18 +110,18 @@ def search_by_date_menu() -> str:
         date_choice = input("\nChoose a date filter: ").strip()
 
         if date_choice.isdigit() and date_choice == "1":
-            year = promp_year()
+            year = prompt_year()
             month = prompt_month()
-            day = promp_day()
+            day = prompt_day()
             search_date = f"{year}-{month:02d}-{day:02d}"
             break
         elif date_choice.isdigit() and date_choice == "2":
-            year = promp_year()
+            year = prompt_year()
             month = prompt_month()
             search_date = f"{year}-{month:02d}-%"
             break
         elif date_choice.isdigit() and date_choice == "3":
-            year = promp_year()
+            year = prompt_year()
             search_date = f"{year}-%-%"
             break
         else:
@@ -263,8 +163,6 @@ def handle_add_transaction() -> None:
     note = prompt_note()
 
     date = prompt_date()
-    # today = datetime.now().astimezone().date().isoformat()
-
     transaction = Transaction(
         type=t_type,
         amount=amount,
@@ -352,20 +250,6 @@ def handle_transactions_by_type_category() -> None:
             generate_chart(totals, datetotals, filter=search_type_category)
 
 
-def handle_seed_demo_data() -> None:
-    clear_terminal()
-    confirm = (
-        input("This will add demo transactions to the DB. Continue? (y/N): ")
-        .strip()
-        .lower()
-    )
-    if confirm != "y":
-        print("  Cancelled.")
-        return
-    count = seed_demo_transactions()
-    print(f"\n  ✓ {count} demo transactions inserted.")
-
-
 def run() -> None:
     display_header()
     while True:
@@ -382,8 +266,6 @@ def run() -> None:
             handle_transactions_by_date()
         elif choice == "5":
             handle_transactions_by_type_category()
-        elif choice == "6":
-            handle_seed_demo_data()
         elif choice == "0":
             print("\nGoodbye!\n")
             break
