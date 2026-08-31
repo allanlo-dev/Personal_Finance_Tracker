@@ -1,3 +1,17 @@
+"""Interactive terminal interface: menus, formatting and flow control.
+
+This module wires the other pieces together. It owns the main loop
+(:func:`run`), the menus the user navigates, and the formatting of results, but
+it delegates input validation to :mod:`tracker.inputs`, persistence to
+:mod:`database` and plotting to :mod:`tracker.charts`.
+
+The functions follow a naming convention that mirrors their role:
+
+* ``display_*`` writes to stdout and returns nothing;
+* ``search_*_menu`` collects the parameters of a query and returns them;
+* ``handle_*`` implements one menu option end to end, from prompt to chart.
+"""
+
 import os
 
 from database import (
@@ -29,16 +43,19 @@ from tracker.models import TYPES, Transaction
 
 
 def clear_terminal() -> None:
+    """Clear the terminal, using the right command for the host platform."""
     os.system("cls" if os.name == "nt" else "clear")  # noqa: S605  -No external input is used in a safe way
 
 
 def display_header() -> None:
+    """Print the application banner shown once at start-up."""
     print("\n" + "=" * 40)
     print("   Personal Finance Tracker (PCT)")
     print("=" * 40)
 
 
 def display_menu() -> None:
+    """Print the main menu options."""
     print("\n\nWhat do you want to do?")
     print("  1. Add transaction")
     print("  2. List all transactions")
@@ -49,6 +66,18 @@ def display_menu() -> None:
 
 
 def calculate_balance(transactions: list[Transaction]) -> tuple[float, float, float]:
+    """Sum income and expenses and return them with the resulting balance.
+
+    Pure function: it neither prints nor reads, which keeps it testable in
+    isolation from :func:`display_balance`.
+
+    Args:
+        transactions: Transactions to total up.
+
+    Returns:
+        A ``(income, expense, balance)`` tuple, where ``balance`` is income
+        minus expenses and may be negative.
+    """
     income = sum(t.amount for t in transactions if t.type == "Income")
     expense = sum(t.amount for t in transactions if t.type == "Expense")
     balance = income - expense
@@ -56,6 +85,11 @@ def calculate_balance(transactions: list[Transaction]) -> tuple[float, float, fl
 
 
 def display_chart() -> bool:
+    """Ask the user whether the current results should be plotted.
+
+    Returns:
+        ``True`` if the user chose to see a chart, ``False`` otherwise.
+    """
     while True:
         print("\nDo you want to display this data in a chart?")
         print("1. Yes")
@@ -71,6 +105,11 @@ def display_chart() -> bool:
 
 
 def display_balance(transactions: list[Transaction]) -> None:
+    """Print the income, expense and balance summary for a set of results.
+
+    Args:
+        transactions: Transactions to summarise.
+    """
     income, expense, balance = calculate_balance(transactions)
     print("\n\n" + "=" * 40)
     print("             |BALANCE|")
@@ -82,6 +121,15 @@ def display_balance(transactions: list[Transaction]) -> None:
 
 
 def display_transactions(transactions: list[Transaction]) -> None:
+    """Print transactions as an aligned table.
+
+    Amounts are prefixed with ``+`` or ``-`` according to their type; the sign
+    is presentational only and is never stored in the database. A placeholder
+    message is printed instead of the table when there is nothing to show.
+
+    Args:
+        transactions: Transactions to render. May be empty.
+    """
     if not transactions:
         print("\n  No transactions found.")
         return
@@ -101,6 +149,15 @@ def display_transactions(transactions: list[Transaction]) -> None:
 
 
 def search_by_date_menu() -> str:
+    """Ask the user for a date filter and build the matching SQL pattern.
+
+    Offers three levels of granularity, each producing a pattern that
+    :func:`database.get_transactions_by_date` can use directly.
+
+    Returns:
+        A ``LIKE`` pattern: ``"YYYY-MM-DD"`` for a single day, ``"YYYY-MM-%"``
+        for a month, or ``"YYYY-%-%"`` for a whole year.
+    """
     print("\nSearch Transactions by:")
     while True:
         print("1. a Specific Date")
@@ -131,6 +188,17 @@ def search_by_date_menu() -> str:
 
 
 def search_by_type_category_menu() -> str:
+    """Ask the user to filter by transaction type, optionally narrowing to one
+    category.
+
+    The user first picks a type, then decides whether to drill down into a
+    single category of that type.
+
+    Returns:
+        Either a type name (a member of :data:`~tracker.models.TYPES`) or a
+        category name. The caller distinguishes the two by testing membership
+        in ``TYPES``.
+    """
     print("\nSearch Transactions by:")
     type = prompt_type()
     while True:
@@ -152,6 +220,11 @@ def search_by_type_category_menu() -> str:
 
 
 def handle_add_transaction() -> None:
+    """Menu option 1: collect a new transaction and store it.
+
+    Prompts for type, amount, category, note and date, persists the result and
+    confirms it on screen with the ID assigned by the database.
+    """
     print("\n--- New Transaction ---")
     t_type = prompt_type()
     amount = prompt_amount()
@@ -177,6 +250,7 @@ def handle_add_transaction() -> None:
 
 
 def handle_all_transactions() -> None:
+    """Menu option 2: list every transaction, with balance and optional chart."""
     clear_terminal()
     transactions = get_all_transactions()
 
@@ -191,6 +265,11 @@ def handle_all_transactions() -> None:
 
 
 def handle_transactions_by_date() -> None:
+    """Menu option 4: list transactions for a day, month or year.
+
+    Delegates the filter to :func:`search_by_date_menu`, then shows the
+    matching rows, their balance and, if requested, a mosaic chart.
+    """
     clear_terminal()
     search_date = search_by_date_menu()
     transactions = get_transactions_by_date(search_date)
@@ -208,6 +287,7 @@ def handle_transactions_by_date() -> None:
 
 
 def handle_transactions_of_last_30_days() -> None:
+    """Menu option 3: list the last 30 days, with balance and optional chart."""
     clear_terminal()
     transactions = get_transactions_of_last_30_days()
 
@@ -225,6 +305,13 @@ def handle_transactions_of_last_30_days() -> None:
 
 
 def handle_transactions_by_type_category() -> None:
+    """Menu option 5: list transactions filtered by type or by category.
+
+    Because :func:`search_by_type_category_menu` may return either kind of
+    label, the selection is tested against :data:`~tracker.models.TYPES` to
+    decide which query to run. A single total is printed rather than a full
+    balance, since the results are all of one type.
+    """
     clear_terminal()
     search_type_category = search_by_type_category_menu()
     if search_type_category in TYPES:
@@ -251,6 +338,11 @@ def handle_transactions_by_type_category() -> None:
 
 
 def run() -> None:
+    """Run the main menu loop until the user chooses to exit.
+
+    Prints the banner once, then repeatedly shows the menu and dispatches the
+    chosen option. Unrecognised input is reported and the loop continues.
+    """
     display_header()
     while True:
         display_menu()

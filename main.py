@@ -1,3 +1,10 @@
+"""Application entry point.
+
+Prepares the database and hands control to the interactive menu. Run it with::
+
+    python main.py
+"""
+
 from database import initialize_db
 from tracker.cli import run
 

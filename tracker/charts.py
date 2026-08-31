@@ -1,3 +1,18 @@
+"""Matplotlib visualisations and the aggregation that feeds them.
+
+The module is split in two halves:
+
+* ``get_*_data`` functions reduce a list of transactions into plain
+  ``{label: total}`` dictionaries. They are pure and do no drawing, which makes
+  them straightforward to test on their own.
+* ``generate_*`` functions take those dictionaries and render a figure. They
+  block on :func:`matplotlib.pyplot.show` until the user closes the window, and
+  release the figure afterwards.
+
+A shared colour convention runs through both charts: teal (``#2DBDB1``) for
+income and red (``#D23917``) for expenses.
+"""
+
 import matplotlib.pyplot as plt
 
 from tracker.models import INCOME_CATEGORIES, TYPES, Transaction
@@ -6,6 +21,23 @@ from tracker.models import INCOME_CATEGORIES, TYPES, Transaction
 def generate_chart(
     totals: dict[str, float], datetotals: dict[str, float], filter: str | None
 ) -> None:
+    """Draw a two-panel figure for a single type or category.
+
+    The left panel is a bar chart of totals; the right panel is a step plot of
+    the amounts over time, annotated with each value. Both are tinted according
+    to whether ``filter`` refers to income or to expenses.
+
+    Args:
+        totals: Mapping of type or category name to its summed amount, as
+            returned by :func:`get_charts_data`.
+        datetotals: Mapping of ISO date to the amount recorded on that date,
+            also from :func:`get_charts_data`.
+        filter: Label describing the current selection, used for the figure
+            title and to pick the colour.
+
+    Note:
+        Blocks until the user closes the chart window.
+    """
     plt.style.use("ggplot")
     colors = [
         "#2DBDB1" if filter in INCOME_CATEGORIES or filter == TYPES[0] else "#D23917"
@@ -61,6 +93,22 @@ def generate_mosaic_chart(
     expensetotals: dict[str, float],
     filter: str | None,
 ) -> None:
+    """Draw a three-panel mosaic summarising a full set of transactions.
+
+    The layout places the balance panel on the left, spanning the full height,
+    with the income breakdown above the expense breakdown on the right.
+
+    Args:
+        totals: Income, expense and balance totals, as returned by
+            :func:`get_mosaic_charts_data`.
+        incometotals: Income totals per category.
+        expensetotals: Expense totals per category.
+        filter: Label describing the current selection, used as the figure
+            title (for example ``"All Transactions"``).
+
+    Note:
+        Blocks until the user closes the chart window.
+    """
 
     plt.style.use("ggplot")
     mosaic = """
@@ -118,6 +166,24 @@ def get_charts_data(
     trans: list[Transaction],
     filter: str,
 ) -> tuple[dict[str, float], dict[str, float]]:
+    """Aggregate transactions for :func:`generate_chart`.
+
+    What the first dictionary groups by depends on ``filter``: when the user
+    filtered by type the totals are grouped by type, otherwise they are grouped
+    by category.
+
+    Args:
+        trans: Transactions to aggregate.
+        filter: The active filter. If it is a member of
+            :data:`~tracker.models.TYPES` the grouping is by type; any other
+            value groups by category.
+
+    Returns:
+        A tuple of two mappings:
+
+        * totals per type or per category, depending on ``filter``;
+        * totals per ISO date.
+    """
     transactions = trans
     typetotals: dict[str, float] = {}
     categorytotals: dict[str, float] = {}
@@ -145,6 +211,24 @@ def get_charts_data(
 def get_mosaic_charts_data(
     trans: list[Transaction],
 ) -> tuple[dict[str, float], dict[str, float], dict[str, float]]:
+    """Aggregate transactions for :func:`generate_mosaic_chart`.
+
+    Walks the list once, accumulating three views at the same time: the
+    headline totals, the income breakdown and the expense breakdown. The
+    running balance is added to the first mapping under the key ``"Balance"``,
+    so it can be plotted alongside the income and expense bars.
+
+    Args:
+        trans: Transactions to aggregate.
+
+    Returns:
+        A tuple of three mappings:
+
+        * totals per type, plus a ``"Balance"`` entry holding income minus
+          expenses;
+        * income totals per category;
+        * expense totals per category.
+    """
     transactions = trans
 
     totals: dict[str, float] = {}
